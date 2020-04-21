@@ -2,7 +2,6 @@ const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const readline = require('readline-sync');
 
-const link = "https://asdahsdkjajslkfbkaujsgfbjaeghfyjj76e8637e68723rhbfajkl.akurat.co/asfjlasdjfawefuafsjasfaladsfpaeoweuasj123729fasj328237123hkfashk32348201jfasda02491jasdfa6123jasfajlkasuqweoiasdfalaewfu0afwejsfljasfjskjasfahhhhrf7asfjasfajhasdfjcasnsdfuasejfasfuewajfas.asfasdfjawfe7asfa.safjaweuasfjjcasd/get/aladdin-2019/";
 
 const pageFilm = (link) => new Promise((resolve, reject) => {
   fetch(link, {
@@ -59,7 +58,7 @@ const pageDalamNunggu = (link) => new Promise((resolve, reject) => {
 
 
 
-const testCookie = () => new Promise((resolve,reject) => {
+const testCookie = (link) => new Promise((resolve,reject) => {
   fetch(link, {
     method: 'GET',
     header: {
@@ -112,22 +111,25 @@ const getDownloadLink = (data) => new Promise((resolve,reject) => {
 
 
 (async () => {
-  while(1){
-    try{
-      const link_film = readline.question('[#] link filmnya : ');
-      const ke_film = await pageFilm(link_film);
-      console.log(`judul => ${ke_film.judul}`);
-      const redirect = await pageNunggu(ke_film.link);
-      const skip_redirect = await pageDalamNunggu(redirect);
-      const get_cookie_download = await testCookie(skip_redirect);
-      const dapet_download_link = await getDownloadLink(get_cookie_download);
-      
-      console.log(dapet_download_link);
-    }catch(err){
-      console.log('ada kesalahan');
+  try{
+    while(true){
+      try{
+        const link_film = readline.question('[#] link filmnya : ');
+        const ke_film = await pageFilm(link_film);
+        console.log(`judul => ${ke_film.judul}`);
+        const redirect = await pageNunggu(ke_film.link);
+        const skip_redirect = await pageDalamNunggu(redirect);
+        const get_cookie_download = await testCookie(skip_redirect);
+        const dapet_download_link = await getDownloadLink(get_cookie_download);
+        
+
+        console.log(dapet_download_link);
+      }catch(err){
+        console.log('ada kesalahan');
+      }
     }
+  } catch(err){
+    console.log(err);
   }
-
-
   
 })();
