@@ -100,12 +100,49 @@ const getDownloadLink = (data) => new Promise((resolve,reject) => {
     const html = await res.text();
     $ = cheerio.load(html);
     const arr = new Array;
+    const linknya = [];
+    const zz = [];
 
     $('a[target="_blank"]').each(function(i,item){
       arr.push(`[${i+1}] ${$(this).attr('class').replace('btnx btn-','')}p => ${$(this).attr('href')}`);
+      linknya.push(`${$(this).attr('href')}`);
     });
-    console.log(arr.join('\n'));
+
+    linknya.forEach(item => {
+      if(item.includes('layarkacaxxi.org')){
+        zz.push(item.split('/')[4]);
+      }
+    });
+
+    const resultnya = {
+      arr,
+      zz: zz[0]
+    }
+
+    resolve(resultnya);
   });
+});
+
+
+const link_direct = (id) => new Promise((resolve,reject) => {
+  fetch(`https://layarkacaxxi.org/api/source/${id}`,{method:'POST'})
+  .then(async res => {
+    resolve(await res.json());
+  })
+});
+
+const shortlink = (link) => new Promise((resolve, reject) => {
+  fetch(`https://tinyurl.com/api-create.php?url=${link}`, {
+      method: 'GET',
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
+      }
+  })
+  .then(async res => {
+      const result = await res.text()
+      resolve(result)
+  })
+  .catch(err => reject(err))
 });
 
 
@@ -116,16 +153,38 @@ const getDownloadLink = (data) => new Promise((resolve,reject) => {
       try{
         const link_film = readline.question('[#] link filmnya : ');
         const ke_film = await pageFilm(link_film);
-        console.log(`judul => ${ke_film.judul}`);
+        console.log(`judul => ${ke_film.judul}\n`);
         const redirect = await pageNunggu(ke_film.link);
         const skip_redirect = await pageDalamNunggu(redirect);
         const get_cookie_download = await testCookie(skip_redirect);
         const dapet_download_link = await getDownloadLink(get_cookie_download);
-        
+        if(dapet_download_link.length === 0){
+          console.log('ada kesalahan\n');
+          break;
+        }       
 
-        console.log(dapet_download_link);
+        console.log(`"sukses" => dapet link mirror\n${dapet_download_link.arr.join('\n')}\n`);
+
+        if(dapet_download_link.zz === undefined){
+          break;
+        }
+
+        const direct_url = await link_direct(dapet_download_link.zz);
+
+        if(direct_url.success === false){
+          break;
+        }
+
+        const linknya_woi = [];
+
+        for(let i=0;i <= direct_url.data.length -1;i++){
+          linknya_woi.push(`[${i + 1}] ${direct_url.data[i].label} => ${await shortlink(direct_url.data[i].file)}`);
+        }
+
+        console.log(`"sukses" => dapet link direct\n${linknya_woi.join('\n')}\n`);
+        
       }catch(err){
-        console.log('ada kesalahan');
+        console.log('"gagal" => gak dapet link direct');
       }
     }
   } catch(err){
